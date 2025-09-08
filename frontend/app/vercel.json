@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/blogs/:match*",
-      "destination": "https://my-test-nuxt-vercel-gamma.vercel.app/blogs/:match*"
+      "destination": "https://my-test-nuxt-vercel-83mh.vercel.app/blogs/:match*"
     }
   ]
 }
