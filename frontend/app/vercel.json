@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/blogs/:match*",
+      "destination": "https://my-test-nuxt-vercel-gamma.vercel.app/blogs/:match*"
+    }
+  ]
+}
