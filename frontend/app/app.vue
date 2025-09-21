@@ -4,32 +4,49 @@
 
     <!-- Login Form -->
     <div v-if="!user" class="login-form">
-      <h2>Login</h2>
-      <form @submit.prevent="signIn">
-        <div>
-          <label for="email">Email:</label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            required
-            placeholder="Enter your email"
-          />
-        </div>
-        <div>
-          <label for="password">Password:</label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            required
-            placeholder="Enter your password"
-          />
-        </div>
-        <button type="submit" :disabled="loading">
-          {{ loading ? "Signing in..." : "Sign In" }}
-        </button>
-      </form>
+      <h2>Login with OTP</h2>
+
+      <!-- Email Input Step -->
+      <div v-if="!otpSent">
+        <form @submit.prevent="sendOTP">
+          <div>
+            <label for="email">Email:</label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              required
+              placeholder="Enter your email"
+            />
+          </div>
+          <button type="submit" :disabled="loading">
+            {{ loading ? "Sending OTP..." : "Send OTP" }}
+          </button>
+        </form>
+      </div>
+
+      <!-- OTP Verification Step -->
+      <div v-else>
+        <p class="otp-sent">OTP sent to {{ email }}</p>
+        <form @submit.prevent="verifyOTP">
+          <div>
+            <label for="otp">Enter OTP:</label>
+            <input
+              id="otp"
+              v-model="otp"
+              type="text"
+              required
+              placeholder="Enter 6-digit OTP"
+              maxlength="6"
+            />
+          </div>
+          <button type="submit" :disabled="loading">
+            {{ loading ? "Verifying..." : "Verify OTP" }}
+          </button>
+        </form>
+        <button @click="resetForm" class="back-btn">Back to Email</button>
+      </div>
+
       <p v-if="error" class="error">{{ error }}</p>
     </div>
 
@@ -51,28 +68,57 @@ const supabase = useSupabaseClient();
 const user = useSupabaseUser();
 
 const email = ref("");
-const password = ref("");
+const otp = ref("");
 const loading = ref(false);
 const error = ref("");
+const otpSent = ref(false);
 
-const signIn = async () => {
+const sendOTP = async () => {
   try {
     loading.value = true;
     error.value = "";
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error: otpError } = await supabase.auth.signInWithOtp({
       email: email.value,
-      password: password.value,
     });
 
-    if (signInError) {
-      error.value = signInError.message;
+    if (otpError) {
+      error.value = otpError.message;
+    } else {
+      otpSent.value = true;
     }
   } catch (err) {
     error.value = "An unexpected error occurred";
   } finally {
     loading.value = false;
   }
+};
+
+const verifyOTP = async () => {
+  try {
+    loading.value = true;
+    error.value = "";
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: email.value,
+      token: otp.value,
+      type: "email",
+    });
+
+    if (verifyError) {
+      error.value = verifyError.message;
+    }
+  } catch (err) {
+    error.value = "An unexpected error occurred";
+  } finally {
+    loading.value = false;
+  }
+};
+
+const resetForm = () => {
+  otpSent.value = false;
+  otp.value = "";
+  error.value = "";
 };
 
 const signOut = async () => {
@@ -149,5 +195,20 @@ button:disabled {
 
 .user-info p {
   margin: 10px 0;
+}
+
+.otp-sent {
+  color: #28a745;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.back-btn {
+  background-color: #6c757d;
+  margin-top: 10px;
+}
+
+.back-btn:hover {
+  background-color: #5a6268;
 }
 </style>
